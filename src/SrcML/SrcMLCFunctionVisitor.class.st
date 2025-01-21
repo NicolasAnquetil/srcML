@@ -22,18 +22,18 @@ SrcMLCFunctionVisitor >> famix: famixClass named: aString [
 ]
 
 { #category : 'visiting - srcML' }
-SrcMLCFunctionVisitor >> famixDecl: anXMLParameter class: aFamixClass [
-	"decl"
+SrcMLCFunctionVisitor >> visitDecl: anXMLNode forFamixClass: aFamixClass [
 
-	| nameNode typeNode famix |
-	nameNode := self
-		detectChildNode: anXMLParameter nodes anyOne
-		key: 'name'.
-	typeNode := self detectChildNode: anXMLParameter nodes anyOne key: 'type' .
+	| visited |
+	visited := (self visitNodeWithKeys: anXMLNode)
+		at: 'decl'
+		ifAbsent: [ ^nil ].
 
-	famix := self famix: aFamixClass named: (self visitElement: nameNode).
-	famix declaredType: (self visitElement: typeNode).
-	^famix
+	^(self famix: aFamixClass)
+		name: (visited at: 'name') ;
+		declaredType: (visited at: 'type') ;
+		yourself
+	 
 ]
 
 { #category : 'visiting - srcML' }
@@ -48,7 +48,15 @@ SrcMLCFunctionVisitor >> visitElementComment: anXMLNode [
 SrcMLCFunctionVisitor >> visitElementDecl_stmt: anXMLNode [
 	"decl"
 
-	^self famixDecl: anXMLNode class: FamixJavaLocalVariable 
+	| visited |
+	visited := (self visitNodeWithKeys: anXMLNode)
+		at: 'decl'.
+
+	^(self famix: FamixJavaLocalVariable)
+		name: (visited at: 'name') ;
+		declaredType: (visited at: 'type') ;
+		yourself
+	 
 ]
 
 { #category : 'visiting - srcML' }
@@ -61,6 +69,7 @@ SrcMLCFunctionVisitor >> visitElementFunction: anXMLElement [
 	function := self famix: FamixJavaMethod named: (visited at: 'name').
 	function parameters: (visited at: 'parameter_list').
 	function declaredType: (visited at: 'type').
+	function localVariables: ((visited at: 'block') select: [:node | node isMooseEntity and: [node isLocalVariable] ]).
 
 	^function
 ]
@@ -69,26 +78,27 @@ SrcMLCFunctionVisitor >> visitElementFunction: anXMLElement [
 SrcMLCFunctionVisitor >> visitElementParameter: anXMLParameter [
 	"decl"
 
-	^self famixDecl: anXMLParameter class: FamixJavaParameter 
+	^self visitDecl: anXMLParameter forFamixClass: FamixJavaParameter 
 ]
 
 { #category : 'visiting - srcML' }
 SrcMLCFunctionVisitor >> visitElementParameter_list: anXMLElement [
-	"type name parameter_list block"
 
-	^anXMLElement nodes
-		select: #isElement
-		thenCollect: [ :aChildElement | self visitElementParameter: aChildElement ]
+	^((super visitElementParameter_list: anXMLElement)
+		reject: #isString)
+		reject: #isNil
 ]
 
 { #category : 'visiting - srcML' }
 SrcMLCFunctionVisitor >> visitElementType: anXMLNode [
-	"decl"
 
-	| nameNode |
-	nameNode := self
-		detectChildNode: anXMLNode 
-		key: 'name'.
+	| visits |
+	visits := self visitNodeWithKeys: anXMLNode.
 
-	^self famix: FamixJavaType named: (self visitElement: nameNode)
+	visits ifNil: [ ^nil].
+
+	^visits
+		at: 'name'
+		ifPresent: [self famix: FamixJavaType named: (visits at: 'name')]
+		ifAbsent: [ nil ]
 ]

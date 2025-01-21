@@ -105,14 +105,15 @@ SrcMLAbstractVisitor >> visitElementAttribute: anXMLElement [
 
 { #category : 'visiting - srcML' }
 SrcMLAbstractVisitor >> visitElementBlock: anXMLElement [
-	^true
+
+	^self visitElement: (self detectChildNode: anXMLElement key: 'block_content')
 
 ]
 
 { #category : 'visiting - srcML' }
 SrcMLAbstractVisitor >> visitElementBlock_content: anXMLElement [
-	^true
 
+	^self visitNodeAsList: anXMLElement 
 ]
 
 { #category : 'visiting - srcML' }
@@ -166,7 +167,7 @@ SrcMLAbstractVisitor >> visitElementClass_decl: anXMLElement [
 { #category : 'visiting - srcML' }
 SrcMLAbstractVisitor >> visitElementComment: anXMLElement [
 
-	^anXMLElement nodes anyOne string.
+	^anXMLElement nodes ifEmpty: [ nil ] ifNotEmpty: [ :children | children anyOne string]
 
 ]
 
@@ -322,8 +323,8 @@ SrcMLAbstractVisitor >> visitElementCppWarning: anXMLElement [
 
 { #category : 'visiting - srcML' }
 SrcMLAbstractVisitor >> visitElementDecl: anXMLElement [
-	^true
 
+	^self visitNodeWithKeys: anXMLElement 
 ]
 
 { #category : 'visiting - srcML' }
@@ -425,7 +426,7 @@ SrcMLAbstractVisitor >> visitElementFriend: anXMLElement [
 { #category : 'visiting - srcML' }
 SrcMLAbstractVisitor >> visitElementFunction: anXMLElement [ 
 
-	^self visitNodeWithElements: anXMLElement 
+	^self visitNodeWithKeys: anXMLElement 
 ]
 
 { #category : 'visiting - srcML' }
@@ -527,7 +528,9 @@ SrcMLAbstractVisitor >> visitElementModifier: anXMLElement [
 { #category : 'visiting - srcML' }
 SrcMLAbstractVisitor >> visitElementName: anXMLElement [
 
-	^anXMLElement nodes anyOne string.
+	^(anXMLElement nodes size > 1)
+		ifTrue: [ anXMLElement nodes last acceptNodeVisitor: self ]
+		ifFalse: [ anXMLElement nodes anyOne string ]
 
 
 ]
@@ -600,8 +603,8 @@ SrcMLAbstractVisitor >> visitElementParameter: anXMLElement [
 
 { #category : 'visiting - srcML' }
 SrcMLAbstractVisitor >> visitElementParameter_list: anXMLElement [
-	^true
 
+	^self visitNodeAsList: anXMLElement
 ]
 
 { #category : 'visiting - srcML' }
@@ -767,22 +770,28 @@ SrcMLAbstractVisitor >> visitElementWhile: anXMLElement [
 ]
 
 { #category : 'reflective operations' }
-SrcMLAbstractVisitor >> visitNodeWithElements: aNodeWithElements [
-	| dict i |
+SrcMLAbstractVisitor >> visitNodeAsList: anXMLElement [
+
+	^anXMLElement nodesCollect: [ :each | each acceptNodeVisitor: self ]
+]
+
+{ #category : 'reflective operations' }
+SrcMLAbstractVisitor >> visitNodeWithKeys: aNodeWithElements [
+	| visits i |
 
 	aNodeWithElements hasChildren
 		ifFalse: [ ^nil ].
 
-	dict := Dictionary new: aNodeWithElements nodes size.
+	visits := Dictionary new: aNodeWithElements nodes size.
 	i := 1.
 	aNodeWithElements nodesDo: [:each |
 		each isElement
-			ifTrue: [ dict at: each name put: (each acceptNodeVisitor: self) ]
-			ifFalse: [ dict at: i put: (each acceptNodeVisitor: self) ].
+			ifTrue: [ visits at: each name put: (each acceptNodeVisitor: self) ]
+			ifFalse: [ visits at: i put: (each acceptNodeVisitor: self) ].
 		i := i + 1.
 	].
 
-	^dict
+	^visits
 ]
 
 { #category : 'visiting' }
