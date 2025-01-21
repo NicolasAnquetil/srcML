@@ -55,16 +55,13 @@ SrcMLCFunctionVisitor >> visitElementDecl_stmt: anXMLNode [
 SrcMLCFunctionVisitor >> visitElementFunction: anXMLElement [
 
 	"type name parameter_list block"
+	| visited function |
+	visited := 	super visitElementFunction: anXMLElement.
 
-	| nameNode paramsNode typeNode blockNode function |
-	typeNode := self detectChildNode: anXMLElement key: 'type' .
-	nameNode := self detectChildNode: anXMLElement key: 'name' .
-	paramsNode := self detectChildNode: anXMLElement key: 'parameter_list' .
-	blockNode := self detectChildNode: anXMLElement key: 'block' .
+	function := self famix: FamixJavaMethod named: (visited at: 'name').
+	function parameters: (visited at: 'parameter_list').
+	function declaredType: (visited at: 'type').
 
-	function := self famix: FamixJavaMethod named: (self visitElement: nameNode).
-	function parameters: (self visitElement: paramsNode).
-	function declaredType: (self visitElement: typeNode).
 	^function
 ]
 

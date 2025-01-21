@@ -425,7 +425,7 @@ SrcMLAbstractVisitor >> visitElementFriend: anXMLElement [
 { #category : 'visiting - srcML' }
 SrcMLAbstractVisitor >> visitElementFunction: anXMLElement [ 
 
-	^super visitNodeWithElements: anXMLElement 
+	^self visitNodeWithElements: anXMLElement 
 ]
 
 { #category : 'visiting - srcML' }
@@ -764,6 +764,25 @@ SrcMLAbstractVisitor >> visitElementUsing: anXMLElement [
 SrcMLAbstractVisitor >> visitElementWhile: anXMLElement [
 	^true
 
+]
+
+{ #category : 'reflective operations' }
+SrcMLAbstractVisitor >> visitNodeWithElements: aNodeWithElements [
+	| dict i |
+
+	aNodeWithElements hasChildren
+		ifFalse: [ ^nil ].
+
+	dict := Dictionary new: aNodeWithElements nodes size.
+	i := 1.
+	aNodeWithElements nodesDo: [:each |
+		each isElement
+			ifTrue: [ dict at: each name put: (each acceptNodeVisitor: self) ]
+			ifFalse: [ dict at: i put: (each acceptNodeVisitor: self) ].
+		i := i + 1.
+	].
+
+	^dict
 ]
 
 { #category : 'visiting' }
