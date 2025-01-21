@@ -2,9 +2,6 @@ Class {
 	#name : 'SrcMLDOMParser',
 	#superclass : 'XMLDOMParser',
 	#instVars : [
-		'indent',
-		'famixStack',
-		'famixNodes',
 		'famixModel'
 	],
 	#category : 'SrcML',
@@ -14,25 +11,15 @@ Class {
 { #category : 'handling - content' }
 SrcMLDOMParser >> endElement: aQualifiedName prefix: aPrefix uri: aURI localName: aLocalName [
 
-"	famixNodes
-		at: aQualifiedName
-		ifPresent: [ famixStack pop ].
-"
-	indent := indent - 1.
-	self popNode endElement: indent.
-]
+	(self srcMLNodeToVisit includes: aQualifiedName)
+		ifTrue: [
+			self topNode
+				acceptNodeVisitor: (self famixVisitorFor: aQualifiedName).
+			self topNode nodes removeAll.
+		].
 
-{ #category : 'handling - content' }
-SrcMLDOMParser >> famixForXML: nodeKind [
+	super endElement: aQualifiedName prefix: aPrefix uri: aURI localName: aLocalName
 
-	famixNodes
-		at: nodeKind
-		ifPresent: [ :famixClass || famixEntity |
-			famixEntity := famixClass new mooseModel: famixModel.
-			((famixClass = FamixJavaMethod) and: [ famixStack isEmpty not ])
-				ifTrue: [ famixEntity parentType: famixStack top ].
-			famixStack push: famixEntity 
-		]
 ]
 
 { #category : 'accessing' }
@@ -41,34 +28,24 @@ SrcMLDOMParser >> famixModel [
 	^famixModel
 ]
 
+{ #category : 'handling - content' }
+SrcMLDOMParser >> famixVisitorFor: ElementName [
+
+	^SrcMLCFunctionVisitor new
+		mooseModel: famixModel ;
+		yourself
+]
+
 { #category : 'initialization' }
 SrcMLDOMParser >> initialize [
 
 	super initialize.
-	
-	indent := 0.
 
-	famixModel := FamixJavaModel new.
-	famixStack := Stack new.
-	famixNodes := Dictionary newFrom: self srcMLNodeToFamix
+	famixModel := FamixJavaModel new
 ]
 
 { #category : 'initialization' }
-SrcMLDOMParser >> srcMLNodeToFamix [
+SrcMLDOMParser >> srcMLNodeToVisit [
 
-	^{
-	'class' -> FamixJavaClass .
-	'function_decl' -> FamixJavaMethod
-	}
-]
-
-{ #category : 'handling - content' }
-SrcMLDOMParser >> startElement: aQualifiedName prefix: aPrefix uri: aURI localName: aLocalName attributes: anAttributeDictionary [
-
-	super startElement: aQualifiedName prefix: aPrefix uri: aURI localName: aLocalName attributes: anAttributeDictionary.
-
-	"self famixForXML: aQualifiedName."
-
-	self nodeStack last startElement: indent.
-	indent := indent + 1
+	^#( function comment )
 ]
