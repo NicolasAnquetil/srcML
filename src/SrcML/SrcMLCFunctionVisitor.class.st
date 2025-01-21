@@ -39,7 +39,7 @@ SrcMLCFunctionVisitor >> visitDecl: anXMLNode forFamixClass: aFamixClass [
 { #category : 'visiting - srcML' }
 SrcMLCFunctionVisitor >> visitElementComment: anXMLNode [
 
-	^(self famix: FamixJavaComment)
+	^(self famix: FamixCComment)
 		content: (super visitElementComment: anXMLNode) ;
 		yourself
 ]
@@ -48,7 +48,7 @@ SrcMLCFunctionVisitor >> visitElementComment: anXMLNode [
 SrcMLCFunctionVisitor >> visitElementDecl_stmt: anXMLNode [
 	"decl"
 
-	^self visitDecl: anXMLNode forFamixClass: FamixJavaLocalVariable	 
+	^self visitDecl: anXMLNode forFamixClass: FamixCLocalVariable	 
 ]
 
 { #category : 'visiting - srcML' }
@@ -58,7 +58,7 @@ SrcMLCFunctionVisitor >> visitElementFunction: anXMLElement [
 	| visited function |
 	visited := 	super visitElementFunction: anXMLElement.
 
-	function := self famix: FamixJavaMethod named: (visited at: 'name').
+	function := self famix: FamixCFunction named: (visited at: 'name').
 	function parameters: (visited at: 'parameter_list').
 	function declaredType: (visited at: 'type').
 	function localVariables: ((visited at: 'block') select: [:node | node isMooseEntity and: [node isLocalVariable] ]).
@@ -70,7 +70,7 @@ SrcMLCFunctionVisitor >> visitElementFunction: anXMLElement [
 SrcMLCFunctionVisitor >> visitElementParameter: anXMLParameter [
 	"decl"
 
-	^self visitDecl: anXMLParameter forFamixClass: FamixJavaParameter 
+	^self visitDecl: anXMLParameter forFamixClass: FamixCParameter 
 ]
 
 { #category : 'visiting - srcML' }
@@ -91,6 +91,6 @@ SrcMLCFunctionVisitor >> visitElementType: anXMLNode [
 
 	^visits
 		at: 'name'
-		ifPresent: [self famix: FamixJavaType named: (visits at: 'name')]
+		ifPresent: [self famix: FamixCType named: (visits at: 'name')]
 		ifAbsent: [ nil ]
 ]

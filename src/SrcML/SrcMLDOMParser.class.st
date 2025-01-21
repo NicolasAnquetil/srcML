@@ -41,7 +41,7 @@ SrcMLDOMParser >> initialize [
 
 	super initialize.
 
-	famixModel := FamixJavaModel new
+	famixModel := FamixCModel new
 ]
 
 { #category : 'initialization' }
