@@ -21,7 +21,7 @@ SrcMLCFunctionVisitor >> famix: famixClass named: aString [
 		yourself
 ]
 
-{ #category : 'visiting - srcML' }
+{ #category : 'entity creation' }
 SrcMLCFunctionVisitor >> visitDecl: anXMLNode forFamixClass: aFamixClass [
 
 	| visited |
@@ -48,15 +48,7 @@ SrcMLCFunctionVisitor >> visitElementComment: anXMLNode [
 SrcMLCFunctionVisitor >> visitElementDecl_stmt: anXMLNode [
 	"decl"
 
-	| visited |
-	visited := (self visitNodeWithKeys: anXMLNode)
-		at: 'decl'.
-
-	^(self famix: FamixJavaLocalVariable)
-		name: (visited at: 'name') ;
-		declaredType: (visited at: 'type') ;
-		yourself
-	 
+	^self visitDecl: anXMLNode forFamixClass: FamixJavaLocalVariable	 
 ]
 
 { #category : 'visiting - srcML' }
